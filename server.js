@@ -1,6 +1,8 @@
 'use strict';
 
 require('dotenv').config();
+require('mongodb');
+const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -19,13 +21,17 @@ app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-appRoutes(app);
-apiRoutes(app);
-fccTestingRoutes(app);
+mongoose.connect(
+    process.env.MONGO_URI,
+    { useNewUrlParser: true, useUnifiedTopology: true }
+).then(() => {
 
+    console.log('Mongoose connected successfully');
 
-const listener = app.listen(process.env.PORT || 3000, () => {
-    console.log('Your app is listening on port ' + listener.address().port);
+    appRoutes(app);
+    apiRoutes(app);
+    fccTestingRoutes(app);
+
     if (process.env.NODE_ENV === 'test') {
         console.log('Running Tests...');
         setTimeout(() => {
@@ -37,6 +43,19 @@ const listener = app.listen(process.env.PORT || 3000, () => {
             }
         }, 3500);
     }
+})
+.catch(err => {
+
+    console.log(err);
+
+    app.use(function (req, res, next) {
+      res.sendFile(process.cwd() + '/views/error.html');
+    });
+
+});
+
+const listener = app.listen(process.env.PORT || 3000, () => {
+    console.log('Your app is listening on port ' + listener.address().port);
 });
 
 module.exports = app;
