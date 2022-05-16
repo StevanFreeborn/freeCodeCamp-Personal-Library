@@ -28,9 +28,9 @@ mongoose.connect(
 
     console.log('Mongoose connected successfully');
 
-    appRoutes(app);
     apiRoutes(app);
     fccTestingRoutes(app);
+    appRoutes(app);
 
     if (process.env.NODE_ENV === 'test') {
         console.log('Running Tests...');
