@@ -1,32 +1,55 @@
 'use strict';
-const Book = require('../models/book')
+const Book = require('../models/book');
+const Comment = require('../models/comment');
 
 module.exports = (app) => {
 
     app.route('/api/books')
-        .get((req, res) => {
-            //response will be array of book objects
-            //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
+        .get(async (req, res) => {
+
+            const books = await Book.find({}).exec();
+
+            const comments = await Comment.find({}).exec();
+
+            const booksWithComments = books.map(book => {
+
+                const bookComments = comments
+                .filter(comment => comment.bookId == book.id)
+                .map(comment => comment.comment);
+
+                book.comments = bookComments;
+
+                return book;
+
+            });
+
+            return res.status(200).json(booksWithComments);
 
         })
 
-        .post((req, res) => {
+        .post(async (req, res) => {
             const title = req.body.title;
             //response will contain new book object including atleast _id and title
 
             if (!title) return res.status(200).send('missing required field title');
+
+            const existingBook = await Book.find({title: title}).exec();
+
+            if (existingBook) return res.status(200).json({
+                error: 'title already exists'
+            });
 
             const newBook = new Book({
                 title: title
             });
 
             newBook.save()
-            .then( doc => {
+            .then( book => {
 
-                return res.status(200).json(doc);
+                return res.status(200).json(book);
 
             })
-            .catch(err => {
+            .catch( err => {
 
                 console.log(err);
                 
@@ -48,10 +71,58 @@ module.exports = (app) => {
             //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
         })
 
-        .post((req, res) => {
-            let bookid = req.params.id;
+        .post(async (req, res) => {
+
             let comment = req.body.comment;
-            //json res format same as .get
+            let bookId = req.params.id;
+            
+            if (!comment) return res.status(200).send('missing required field comment');
+
+            const book = await Book.findById(bookId).exec();
+
+            if (!book) return res.status(200).send('no book exists');
+
+            const newComment = new Comment({
+                bookId: book.id,
+                comment: comment
+            });
+
+            // save new comment
+            newComment.save()
+            .then( comment => {
+
+                // update books
+                Book.findByIdAndUpdate(book.id, {$inc: {commentcount: 1}}, {new: true})
+                .then( async book => {
+
+                    const comments = await Comment.find({bookId: book.id}).exec();
+                    
+                    book.comments = comments.map(comment => comment.comment);
+
+                    return res.status(200).json(book);
+
+                })
+                .catch( err => {
+
+                    console.log(err);
+                
+                    return res.status(200).json({
+                        error: 'could not update book with new comment'
+                    });
+
+                });
+
+            })
+            .catch( err => {
+
+                console.log(err);
+                
+                return res.status(200).json({
+                    error: 'could not save new comment'
+                });
+
+            });
+
         })
 
         .delete((req, res) => {

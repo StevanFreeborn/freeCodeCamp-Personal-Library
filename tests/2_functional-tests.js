@@ -15,10 +15,6 @@ chai.use(chaiHttp);
 
 suite('Functional Tests', () => {
 
-    /*
-    * ----[EXAMPLE TEST]----
-    * Each test should completely test the response of the API end-point including response status code!
-    */
     test('#example Test GET /api/books', (done) => {
         chai.request(server)
             .get('/api/books')
@@ -31,9 +27,6 @@ suite('Functional Tests', () => {
                 done();
             });
     });
-    /*
-    * ----[END of EXAMPLE TEST]----
-    */
 
     suite('Routing tests', ()=> {
 
@@ -41,11 +34,46 @@ suite('Functional Tests', () => {
         suite('POST /api/books with title => create book object/expect book object', function () {
 
             test('Test POST /api/books with title', (done) => {
-                //done();
+                
+                chai.request(server)
+                .post('/api/books')
+                .set('content-type', 'application/x-www-urlencoded')
+                .type('form')
+                .send(`title=test${new Date().toISOString()}`)
+                .end((err, res) => {
+
+                    if (err) console.log(err);
+
+                    assert.equal(res.status, 200);
+                    assert.equal(res.type, 'application/json');
+                    assert.property(res.body, 'title');
+                    assert.property(res.body, '_id');
+                    
+                    done();
+
+                });
+
             });
 
             test('Test POST /api/books with no title given', (done) => {
-                //done();
+                
+                chai.request(server)
+                .post('/api/books')
+                .set('content-type', 'application/x-www-urlencoded')
+                .type('form')
+                .send()
+                .end((err, res) => {
+
+                    if (err) console.log(err);
+
+                    assert.equal(res.status, 200);
+                    assert.equal(res.type, 'text/html');
+                    assert.equal(res.text, 'missing required field title');
+                    
+                    done();
+
+                });
+
             });
 
         });
@@ -54,7 +82,31 @@ suite('Functional Tests', () => {
         suite('GET /api/books => array of books', () => {
 
             test('Test GET /api/books', function (done) {
-                //done();
+                
+                chai.request(server)
+                .get('/api/books')
+                .end((err, res) => {
+
+                    if (err) console.log(err);
+
+                    assert.equal(res.status, 200);
+                    assert.equal(res.type, 'application/json');
+                    assert.isArray(res.body);
+
+                    const books = res.body;
+
+                    books.forEach(book => {
+
+                        assert.property(book, '_id');
+                        assert.property(book, 'title');
+                        assert.property(book, 'comments');
+
+                    });
+
+                    done();
+
+                });
+
             });
 
         });
