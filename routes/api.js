@@ -17,9 +17,12 @@ module.exports = (app) => {
                 .filter(comment => comment.bookId == book.id)
                 .map(comment => comment.comment);
 
-                book.comments = bookComments;
-
-                return book;
+                return {
+                    _id: book.id,
+                    title: book.title,
+                    commentcount: book.commentcount,
+                    comments: bookComments
+                };
 
             });
 
@@ -28,10 +31,14 @@ module.exports = (app) => {
         })
 
         .post(async (req, res) => {
-            
+
             const title = req.body.title;
 
             if (!title) return res.status(200).send('missing required field title');
+
+            const book = await Book.findOne({title: title}).exec();
+            
+            if (book) return res.status(200).json(book);
 
             const newBook = new Book({
                 title: title
@@ -60,9 +67,25 @@ module.exports = (app) => {
         });
 
     app.route('/api/books/:id')
-        .get((req, res) => {
-            let bookid = req.params.id;
-            //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+        .get(async (req, res) => {
+
+            const bookId = req.params.id;
+
+            const book = await Book.findById(bookId).exec();
+
+            if (!book) return res.status(200).send('no book exists');
+
+            const comments = await Comment.find({bookId: bookId}).exec();
+
+            const bookComments = comments.map(comment =>  comment.comment);
+
+            return res.status(200).json({
+                _id: book.id,
+                title: book.title,
+                commentcount: book.commentcount,
+                comments: bookComments
+            });
+
         })
 
         .post(async (req, res) => {
@@ -91,9 +114,14 @@ module.exports = (app) => {
 
                     const comments = await Comment.find({bookId: book.id}).exec();
                     
-                    book.comments = comments.map(comment => comment.comment);
+                    const bookComments = comments.map(comment => comment.comment);
 
-                    return res.status(200).json(book);
+                    return res.status(200).json({
+                        _id: book.id,
+                        title: book.title,
+                        commentcount: book.commentcount,
+                        comments: bookComments
+                    });
 
                 })
                 .catch( err => {
