@@ -28,16 +28,10 @@ module.exports = (app) => {
         })
 
         .post(async (req, res) => {
+            
             const title = req.body.title;
-            //response will contain new book object including atleast _id and title
 
             if (!title) return res.status(200).send('missing required field title');
-
-            const existingBook = await Book.find({title: title}).exec();
-
-            if (existingBook) return res.status(200).json({
-                error: 'title already exists'
-            });
 
             const newBook = new Book({
                 title: title
