@@ -88,34 +88,44 @@ suite('Functional Tests', () => {
 
         });
 
-
         suite('GET /api/books => array of books', () => {
 
             test('Test GET /api/books', function (done) {
 
                 chai.request(server)
-                    .get('/api/books')
+                    .post('/api/books')
+                    .set('content-type', 'application/x-www-urlencoded')
+                    .type('form')
+                    .send(`title=test${new Date().toISOString()}`)
                     .end((err, res) => {
 
-                        if (err) console.log(err);
+                        chai.request(server)
+                            .get('/api/books')
+                            .end((err, res) => {
 
-                        assert.equal(res.status, 200);
-                        assert.equal(res.type, 'application/json');
-                        assert.isArray(res.body);
+                                if (err) console.log(err);
 
-                        const books = res.body;
+                                assert.equal(res.status, 200);
+                                assert.equal(res.type, 'application/json');
+                                assert.isArray(res.body);
 
-                        books.forEach(book => {
+                                const books = res.body;
 
-                            assert.property(book, '_id');
-                            assert.property(book, 'title');
-                            assert.property(book, 'comments');
+                                books.forEach(book => {
 
-                        });
+                                    assert.property(book, '_id');
+                                    assert.property(book, 'title');
+                                    assert.property(book, 'comments');
 
-                        done();
+                                });
+
+                                done();
+
+                            });
 
                     });
+
+
 
             });
 
