@@ -63,7 +63,41 @@ module.exports = (app) => {
         })
 
         .delete((req, res) => {
-            //if successful response will be 'complete delete successful'
+            
+            Book.deleteMany({})
+            .then( bookDeleteResult => {
+
+                console.log(`# of books delete: ${bookDeleteResult.deletedCount}`);
+
+                Comment.deleteMany({})
+                .then( commentDeleteResult => {
+
+                    console.log(`# of comments delete: ${commentDeleteResult.deletedCount}`);
+
+                    return res.status(200).send('complete delete successful');
+
+                })
+                .catch( err => {
+
+                    if (err) console.log(err);
+
+                    return res.status(200).json({
+                        error: 'complete delete unsuccessful'
+                    });
+
+                });
+
+            })
+            .catch( err => {
+
+                if (err) console.log(err);
+
+                return res.status(200).json({
+                    error: 'complete delete unsuccessful'
+                });
+
+            });
+
         });
 
     app.route('/api/books/:id')
@@ -108,7 +142,7 @@ module.exports = (app) => {
             newComment.save()
             .then( comment => {
 
-                // update books
+                // update book
                 Book.findByIdAndUpdate(book.id, {$inc: {commentcount: 1}}, {new: true})
                 .then( async book => {
 
@@ -148,8 +182,43 @@ module.exports = (app) => {
         })
 
         .delete((req, res) => {
-            let bookid = req.params.id;
-            //if successful response will be 'delete successful'
+
+            const bookId = req.params.id;
+            
+            Book.deleteOne({_id: bookId})
+            .then( bookDeleteResult => {
+
+                if (bookDeleteResult.deletedCount == 0) return res.status(200).send('no book exists');
+
+                console.log(`# of books delete: ${bookDeleteResult.deletedCount}`);
+
+                Comment.deleteMany({bookId: bookId})
+                .then( commentDeleteResult => {
+
+                    console.log(`# of comments delete: ${commentDeleteResult.deletedCount}`);
+
+                    return res.status(200).send('delete successful');
+
+                })
+                .catch( err => {
+
+                    return res.status(200).json({
+                        error: 'comment delete unsuccessful'
+                    });
+
+                });
+
+            })
+            .catch( err => {
+
+                console.log(err)
+
+                return res.status(200).json({
+                    error: 'book delete unsuccessful'
+                });
+
+            });
+
         });
 
 };
