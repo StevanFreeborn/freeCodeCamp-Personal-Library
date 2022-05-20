@@ -18,29 +18,28 @@ suite('Functional Tests', () => {
     test('#example Test GET /api/books', (done) => {
 
         chai.request(server)
-        .post('/api/books')
-        .set('content-type', 'application/x-www-urlencoded')
-        .type('form')
-        .send(`title=test${new Date().toISOString()}`)
-        .end((err, res) => {
-
-            chai.request(server)
-            .get('/api/books')
+            .post('/api/books')
+            .set('content-type', 'application/x-www-urlencoded')
+            .type('form')
+            .send(`title=test${new Date().toISOString()}`)
             .end((err, res) => {
-                assert.equal(res.status, 200);
-                assert.isArray(res.body, 'response should be an array');
-                assert.property(res.body[0], 'commentcount', 'Books in array should contain commentcount');
-                assert.property(res.body[0], 'title', 'Books in array should contain title');
-                assert.property(res.body[0], '_id', 'Books in array should contain _id');
-                done();
-            });
 
-        });
+                chai.request(server)
+                    .get('/api/books')
+                    .end((err, res) => {
+                        assert.equal(res.status, 200);
+                        assert.isArray(res.body, 'response should be an array');
+                        assert.property(res.body[0], 'commentcount', 'Books in array should contain commentcount');
+                        assert.property(res.body[0], 'title', 'Books in array should contain title');
+                        assert.property(res.body[0], '_id', 'Books in array should contain _id');
+                        done();
+                    });
+
+            });
 
     });
 
     suite('Routing tests', () => {
-
 
         suite('POST /api/books with title => create book object/expect book object', function () {
 
@@ -142,7 +141,7 @@ suite('Functional Tests', () => {
                         done();
 
                     });
-                
+
             });
 
             test('Test GET /api/books/[id] with valid id in db', (done) => {

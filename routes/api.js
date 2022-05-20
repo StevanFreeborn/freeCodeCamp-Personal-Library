@@ -14,8 +14,8 @@ module.exports = (app) => {
             const booksWithComments = books.map(book => {
 
                 const bookComments = comments
-                .filter(comment => comment.bookId == book.id)
-                .map(comment => comment.comment);
+                    .filter(comment => comment.bookId == book.id)
+                    .map(comment => comment.comment);
 
                 return {
                     _id: book.id,
@@ -36,8 +36,8 @@ module.exports = (app) => {
 
             if (!title) return res.status(200).send('missing required field title');
 
-            const book = await Book.findOne({title: title}).exec();
-            
+            const book = await Book.findOne({ title: title }).exec();
+
             if (book) return res.status(200).json(book);
 
             const newBook = new Book({
@@ -45,39 +45,50 @@ module.exports = (app) => {
             });
 
             newBook.save()
-            .then( book => {
+                .then(book => {
 
-                return res.status(200).json(book);
+                    return res.status(200).json(book);
 
-            })
-            .catch( err => {
+                })
+                .catch(err => {
 
-                console.log(err);
-                
-                return res.status(200).json({
-                    error: 'could not save new book'
+                    console.log(err);
+
+                    return res.status(200).json({
+                        error: 'could not save new book'
+                    });
+
                 });
-
-            });
 
         })
 
         .delete((req, res) => {
-            
+
             Book.deleteMany({})
-            .then( bookDeleteResult => {
+                .then(bookDeleteResult => {
 
-                console.log(`# of books delete: ${bookDeleteResult.deletedCount}`);
+                    console.log(`# of books delete: ${bookDeleteResult.deletedCount}`);
 
-                Comment.deleteMany({})
-                .then( commentDeleteResult => {
+                    Comment.deleteMany({})
+                        .then(commentDeleteResult => {
 
-                    console.log(`# of comments delete: ${commentDeleteResult.deletedCount}`);
+                            console.log(`# of comments delete: ${commentDeleteResult.deletedCount}`);
 
-                    return res.status(200).send('complete delete successful');
+                            return res.status(200).send('complete delete successful');
+
+                        })
+                        .catch(err => {
+
+                            if (err) console.log(err);
+
+                            return res.status(200).json({
+                                error: 'complete delete unsuccessful'
+                            });
+
+                        });
 
                 })
-                .catch( err => {
+                .catch(err => {
 
                     if (err) console.log(err);
 
@@ -86,17 +97,6 @@ module.exports = (app) => {
                     });
 
                 });
-
-            })
-            .catch( err => {
-
-                if (err) console.log(err);
-
-                return res.status(200).json({
-                    error: 'complete delete unsuccessful'
-                });
-
-            });
 
         });
 
@@ -109,9 +109,9 @@ module.exports = (app) => {
 
             if (!book) return res.status(200).send('no book exists');
 
-            const comments = await Comment.find({bookId: bookId}).exec();
+            const comments = await Comment.find({ bookId: bookId }).exec();
 
-            const bookComments = comments.map(comment =>  comment.comment);
+            const bookComments = comments.map(comment => comment.comment);
 
             return res.status(200).json({
                 _id: book.id,
@@ -126,7 +126,7 @@ module.exports = (app) => {
 
             let comment = req.body.comment;
             let bookId = req.params.id;
-            
+
             if (!comment) return res.status(200).send('missing required field comment');
 
             const book = await Book.findById(bookId).exec();
@@ -140,84 +140,84 @@ module.exports = (app) => {
 
             // save new comment
             newComment.save()
-            .then( comment => {
+                .then(comment => {
 
-                // update book
-                Book.findByIdAndUpdate(book.id, {$inc: {commentcount: 1}}, {new: true})
-                .then( async book => {
+                    // update book
+                    Book.findByIdAndUpdate(book.id, { $inc: { commentcount: 1 } }, { new: true })
+                        .then(async book => {
 
-                    const comments = await Comment.find({bookId: book.id}).exec();
-                    
-                    const bookComments = comments.map(comment => comment.comment);
+                            const comments = await Comment.find({ bookId: book.id }).exec();
 
-                    return res.status(200).json({
-                        _id: book.id,
-                        title: book.title,
-                        commentcount: book.commentcount,
-                        comments: bookComments
-                    });
+                            const bookComments = comments.map(comment => comment.comment);
+
+                            return res.status(200).json({
+                                _id: book.id,
+                                title: book.title,
+                                commentcount: book.commentcount,
+                                comments: bookComments
+                            });
+
+                        })
+                        .catch(err => {
+
+                            console.log(err);
+
+                            return res.status(200).json({
+                                error: 'could not update book with new comment'
+                            });
+
+                        });
 
                 })
-                .catch( err => {
+                .catch(err => {
 
                     console.log(err);
-                
+
                     return res.status(200).json({
-                        error: 'could not update book with new comment'
+                        error: 'could not save new comment'
                     });
 
                 });
-
-            })
-            .catch( err => {
-
-                console.log(err);
-                
-                return res.status(200).json({
-                    error: 'could not save new comment'
-                });
-
-            });
 
         })
 
         .delete((req, res) => {
 
             const bookId = req.params.id;
-            
-            Book.deleteOne({_id: bookId})
-            .then( bookDeleteResult => {
 
-                if (bookDeleteResult.deletedCount == 0) return res.status(200).send('no book exists');
+            Book.deleteOne({ _id: bookId })
+                .then(bookDeleteResult => {
 
-                console.log(`# of books delete: ${bookDeleteResult.deletedCount}`);
+                    if (bookDeleteResult.deletedCount == 0) return res.status(200).send('no book exists');
 
-                Comment.deleteMany({bookId: bookId})
-                .then( commentDeleteResult => {
+                    console.log(`# of books delete: ${bookDeleteResult.deletedCount}`);
 
-                    console.log(`# of comments delete: ${commentDeleteResult.deletedCount}`);
+                    Comment.deleteMany({ bookId: bookId })
+                        .then(commentDeleteResult => {
 
-                    return res.status(200).send('delete successful');
+                            console.log(`# of comments delete: ${commentDeleteResult.deletedCount}`);
+
+                            return res.status(200).send('delete successful');
+
+                        })
+                        .catch(err => {
+
+                            return res.status(200).json({
+                                error: 'comment delete unsuccessful'
+                            });
+
+                        });
 
                 })
-                .catch( err => {
+                .catch(err => {
+
+                    console.log(err)
 
                     return res.status(200).json({
-                        error: 'comment delete unsuccessful'
+                        error: 'book delete unsuccessful'
                     });
 
                 });
-
-            })
-            .catch( err => {
-
-                console.log(err)
-
-                return res.status(200).json({
-                    error: 'book delete unsuccessful'
-                });
-
-            });
 
         });
 

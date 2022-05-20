@@ -44,15 +44,15 @@ mongoose.connect(
         }, 3500);
     }
 })
-.catch(err => {
+    .catch(err => {
 
-    console.log(err);
+        console.log(err);
 
-    app.use(function (req, res, next) {
-      res.sendFile(process.cwd() + '/views/error.html');
+        app.use(function (req, res, next) {
+            res.sendFile(process.cwd() + '/views/error.html');
+        });
+
     });
-
-});
 
 const listener = app.listen(process.env.PORT || 3000, () => {
     console.log('Your app is listening on port ' + listener.address().port);
